@@ -289,3 +289,21 @@ sudo systemctl restart NetworkManager
 etcdctl --cacert /etc/kubernetes/pki/etcd/ca.crt --cert /etc/kubernetes/pki/etcd/peer.crt --key /etc/kubernetes/pki/etcd/peer.key  member list -w table
 etcdctl --cacert /etc/kubernetes/pki/etcd/ca.crt --cert /etc/kubernetes/pki/etcd/peer.crt --key /etc/kubernetes/pki/etcd/peer.key member remove fd63c5ff2b206142
 ```
+
+##Installing etcdctl
+
+```bash
+kubectl get pods -n kube-system -l component=etcd -o jsonpath="{.items[0].spec.containers[0].image}"
+ETCD_VERSION="3.5.16" #based on line before
+wget https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz
+tar xvf etcd-v3.5.16-linux-amd64.tar.gz
+sudo mv etcd-v3.5.16-linux-amd64/etcdctl /usr/local/bin/
+
+etcdctl version
+ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  member list
+
+```
