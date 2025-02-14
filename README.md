@@ -1,4 +1,4 @@
-## Config up haproxy
+## Config haproxy
 
 ```bash
 #/etc/haproxy/haproxy.cfg
@@ -298,6 +298,7 @@ ETCD_VERSION="3.5.16" #based on line before
 wget https://github.com/etcd-io/etcd/releases/download/v${ETCD_VERSION}/etcd-v${ETCD_VERSION}-linux-amd64.tar.gz
 tar xvf etcd-v3.5.16-linux-amd64.tar.gz
 sudo mv etcd-v3.5.16-linux-amd64/etcdctl /usr/local/bin/
+sudo mv etcd-v3.5.16-linux-amd64/etcdutl /usr/local/bin/
 
 etcdctl version
 ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
@@ -305,5 +306,42 @@ ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
   --cert=/etc/kubernetes/pki/etcd/server.crt \
   --key=/etc/kubernetes/pki/etcd/server.key \
   member list
+
+```
+
+## Backup/Restore ETCD
+
+```bash
+kubectl describe -n kube-system pod etcd-kub-red03 | grep -i file
+>output
+>SeccompProfile:       RuntimeDefault
+>      --cert-file=/etc/kubernetes/pki/etcd/server.crt
+>      --key-file=/etc/kubernetes/pki/etcd/server.key
+>      --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
+>      --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
+>      --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+>      --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+
+
+ETCDCTL_API=3 etcdctl snapshot save \
+  --endpoints=https://127.0.0.1:2379 \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  /opt/etcd-backup-$(date +"%Y-%m-%d_%H-%M-%S").db
+
+ETCDCTL_API=3 etcdutl snapshot status /opt/etcd-backup-name.db
+
+#get dir of data
+kubectl -n kube-system get pod -l component=etcd -o yaml | grep -A 5 "command:"
+
+#Check volume mounts
+kubectl -n kube-system get pod -l component=etcd -o yaml | grep -A 10 "volumeMounts"
+
+
+ETCDCTL_API=3 etcdctl snapshot restore /var/lib/etcd/backup.db \
+  --data-dir /var/lib/etcd
+
+systemctl restart kubelet
 
 ```
