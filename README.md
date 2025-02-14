@@ -290,7 +290,7 @@ etcdctl --cacert /etc/kubernetes/pki/etcd/ca.crt --cert /etc/kubernetes/pki/etcd
 etcdctl --cacert /etc/kubernetes/pki/etcd/ca.crt --cert /etc/kubernetes/pki/etcd/peer.crt --key /etc/kubernetes/pki/etcd/peer.key member remove fd63c5ff2b206142
 ```
 
-##Installing etcdctl
+## Installing etcdctl
 
 ```bash
 kubectl get pods -n kube-system -l component=etcd -o jsonpath="{.items[0].spec.containers[0].image}"
